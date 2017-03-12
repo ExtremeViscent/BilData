@@ -57,6 +57,6 @@ int main(int argc, char* argv[])
 	{
 		printf("Error exception:%s\n", e.what());
 	}
-
+	system("pause");
 	return 0;
 }
