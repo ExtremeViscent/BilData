@@ -13,14 +13,11 @@ using namespace web::http;                  // Common HTTP functionality
 using namespace web::http::client;          // HTTP client features
 using namespace concurrency::streams;       // Asynchronous streams
 
-const time_t t = time(NULL);
-
 int main(int argc, char* argv[])
 {
 	auto fileStream = std::make_shared<ostream>();
-	struct tm* current_time = localtime(&t);
-	std::string tim = "\"tm_day\", \"tm_hour\", \"tm_min\"";
 	// Open stream to output file.
+
 	pplx::task<void> requestTask = fstream::open_ostream(U("a.json")).then([=](ostream outFile)
 	{
 		*fileStream = outFile;
@@ -49,14 +46,38 @@ int main(int argc, char* argv[])
 	});
 
 	// Wait for all the outstanding I/O to complete and handle any exceptions
-	try
-	{
-		requestTask.wait();
+	while (1) {
+		time_t rawtime;
+		struct tm *info;
+		time(&rawtime);
+		info = gmtime(&rawtime);
+		char mon = info->tm_mon;
+		char day = info->tm_mday;
+		char hrs = info->tm_hour;
+		char min = info->tm_min;
+		std::stringstream fn;
+		fn << info->tm_mon << "-" << info->tm_mday << "-" << info->tm_hour+8 << "-" << info->tm_min;
+		std::string fnme;
+		fn >> fnme;
+
+		try
+		{
+			requestTask.wait();
+		}
+		catch (const std::exception &e)
+		{
+			printf("Error exception:%s\n", e.what());
+		}
+		std::stringstream fn1;
+		fn1 << fnme << ".json";
+		std::string fnme1;
+		char filename[sizeof(fnme1)];
+		fn1 >> filename;
+		if (!std::rename("a.json", filename))
+		{
+			std::cout << fnme;
+		}
+		_sleep(900 * 1000);
 	}
-	catch (const std::exception &e)
-	{
-		printf("Error exception:%s\n", e.what());
-	}
-	system("pause");
 	return 0;
 }
